@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hoshiarpur — The City of Saints</title>
+    
+    <!-- Premium Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Space+Grotesk:wght@300;400;600&family=Space+Mono&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="Hsp.png">
+
+    <style>
+        :root {
+            --bg: #e8e6e1;
+            --text: #1a1a1a;
+            --accent: #c44d28; /* Terracotta for the wood inlay heritage */
+            --line: rgba(0,0,0,0.1);
+            --font-display: 'Cinzel', serif;
+            --font-body: 'Space Grotesk', sans-serif;
+            --font-mono: 'Space Mono', monospace;
+            --easing: cubic-bezier(0.77, 0, 0.175, 1);
+        }
+
+        [data-theme="dark"] {
+            --bg: #0f0f0f;
+            --text: #e0e0e0;
+            --line: rgba(255,255,255,0.1);
+        }
+
+        /* --- RESET & BASE --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; cursor: none; } /* Hide default cursor */
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: var(--font-body);
+            overflow-x: hidden;
+            transition: background-color 0.5s var(--easing), color 0.5s var(--easing);
+        }
+        
+        /* Prevent scrolling while loading */
+        body.loading { overflow: hidden; height: 100vh; }
+
+        /* --- NOISE TEXTURE --- */
+        .noise {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.05;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* --- CUSTOM CURSOR --- */
+        .cursor {
+            position: fixed;
+            width: 20px; height: 20px;
+            border: 1px solid var(--text);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s;
+            mix-blend-mode: difference;
+        }
+        .cursor.active {
+            transform: translate(-50%, -50%) scale(3);
+            background: var(--text);
+            border-color: transparent;
+            opacity: 0.2;
+        }
+
+        /* --- TYPOGRAPHY UTILS --- */
+        .h1 { font-family: var(--font-display); font-size: clamp(3rem, 12vw, 10rem); line-height: 0.85; letter-spacing: -0.02em; }
+        .h2 { font-family: var(--font-display); font-size: clamp(2rem, 5vw, 4rem); margin-bottom: 2rem; }
+        .p-lead { font-size: clamp(1rem, 1.5vw, 1.25rem); max-width: 60ch; line-height: 1.6; opacity: 0.8; }
+        .mono { font-family: var(--font-mono); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.6; }
+
+        /* --- LAYOUT UTILS --- */
+        .container { width: 90%; max-width: 1600px; margin: 0 auto; }
+        .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px; }
+        .section { padding: 120px 0; border-bottom: 1px solid var(--line); }
+        .flex-sb { display: flex; justify-content: space-between; align-items: flex-start; }
+        
+        /* --- PREMIUM LOADER --- */
+        .loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            background: var(--bg); z-index: 2000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: transform 1s var(--easing);
+        }
+        
+        /* The Inlay Pattern SVG */
+        .loader-icon {
+            width: 120px; height: 120px;
+            margin-bottom: 40px;
+        }
+        .loader-icon path {
+            fill: none;
+            stroke: var(--text);
+            stroke-width: 1;
+            stroke-dasharray: 400;
+            stroke-dashoffset: 400;
+            animation: drawInlay 2.5s var(--easing) forwards;
+        }
+
+        @keyframes drawInlay {
+            0% { stroke-dashoffset: 400; opacity: 0; }
+            10% { opacity: 1; }
+            100% { stroke-dashoffset: 0; opacity: 1; }
+        }
+
+        .loader-text {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            letter-spacing: 0.5em;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .loader-text span {
+            display: block;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.5s forwards;
+        }
+
+        .loader-progress {
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            font-family: var(--font-mono);
+            font-size: 3rem;
+            color: var(--accent);
+            opacity: 0.4;
+        }
+
+        @keyframes fadeInUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- HEADER --- */
+        header {
+            position: fixed; top: 0; left: 0; width: 100%; padding: 30px 5%;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100; mix-blend-mode: difference; color: #fff;
+            opacity: 0; /* Hidden initially */
+            transform: translateY(-20px);
+            transition: opacity 1s ease, transform 1s ease;
+        }
+        body.loaded header { opacity: 1; transform: translateY(0); }
+
+        .logo { font-family: var(--font-display); font-weight: 600; font-size: 1.2rem; }
+        .menu-btn { font-family: var(--font-body); text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px; }
+
+        /* --- HERO --- */
+        .hero { min-height: 100vh; display: flex; align-items: center; position: relative; padding-top: 100px; }
+        .hero-title span { display: block; overflow: hidden; }
+        .hero-title span i { display: block; transform: translateY(100%); transition: transform 1.2s var(--easing); font-style: normal; }
+        
+        .hero-img-wrap {
+            position: absolute; right: 5%; top: 20%; width: 30vw; height: 40vw;
+            overflow: hidden; opacity: 0; transform: scale(0.9);
+            transition: all 1.5s var(--easing); z-index: -1;
+        }
+        .hero-img {
+            width: 100%; height: 100%; object-fit: cover;
+            filter: grayscale(100%); transition: filter 0.5s;
+        }
+        
+        /* Loaded State */
+        body.loaded .loader { transform: translateY(-100%); }
+        body.loaded .hero-title span i { transform: translateY(0); transition-delay: 0.6s; }
+        body.loaded .hero-img-wrap { opacity: 0.8; transform: scale(1); transition-delay: 0.8s; }
+        body.loaded .p-lead-hero { animation: revealUp 1s 1.2s forwards var(--easing) !important; }
+
+        /* --- ANIMATION UTILS --- */
+        @keyframes revealUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- HERITAGE SECTION --- */
+        .heritage-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+        
+        /* --- LIST SECTION --- */
+        .location-item {
+            padding: 40px 0; border-top: 1px solid var(--line);
+            display: flex; justify-content: space-between; align-items: baseline;
+            transition: padding 0.3s var(--easing);
+        }
+        .location-item:hover { padding-left: 20px; padding-right: 20px; background: rgba(0,0,0,0.02); }
+        .location-name { font-size: 2.5rem; font-family: var(--font-display); }
+        .location-meta { font-family: var(--font-body); font-size: 0.9rem; opacity: 0.6; }
+
+        .history-timeline { position: relative; padding-left: 20%; }
+        .timeline-item {
+            position: relative; padding: 80px 0; border-bottom: 1px solid var(--line);
+        }
+        .timeline-year {
+            position: absolute; left: -25%; top: 85px; font-family: var(--font-display);
+            font-size: 3rem; color: var(--accent); opacity: 0.3;
+        }
+        .timeline-content { max-width: 600px; }
+        .timeline-title { font-family: var(--font-display); font-size: 1.8rem; margin-bottom: 1rem; }
+
+        /* --- SCROLL REVEAL --- */
+        .reveal { opacity: 0; transform: translateY(30px); transition: all 1s var(--easing); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+
+
+        /* --- MARQUEE --- */
+        .marquee-wrap { padding: 60px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); overflow: hidden; }
+        .marquee-content { white-space: nowrap; display: flex; gap: 40px; animation: scroll 20s linear infinite; }
+        .marquee-item { font-size: 6rem; font-family: var(--font-display); -webkit-text-stroke: 1px var(--text); color: transparent; }
+        @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+        /* --- FOOTER --- */
+        footer { padding: 100px 0 40px; }
+        .footer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+        .footer-link { display: block; font-size: 1.5rem; margin-bottom: 10px; text-decoration: none; color: var(--text); position: relative; width: fit-content; }
+        .footer-link::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 1px; background: var(--text); transition: width 0.3s; }
+        .footer-link:hover::after { width: 100%; }
+
+        @media (max-width: 768px) {
+            .grid { display: flex; flex-direction: column; }
+            .heritage-grid { grid-template-columns: 1fr; }
+            .hero-img-wrap { width: 80vw; height: 60vw; top: auto; bottom: 10%; right: -10%; opacity: 0.1; }
+            .h1 { font-size: 15vw; }
+            .location-name { font-size: 1.8rem; }
+            .history-timeline { padding-left: 0; }
+            .timeline-year { position: relative; left: 0; top: 0; display: block; margin-bottom: 10px; }
+            .loader-icon { width: 80px; height: 80px; }
+            .loader-text { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body class="loading" data-theme="light">
+    
+    <!-- NOISE OVERLAY -->
+    <div class="noise"></div>
+    
+    <!-- CUSTOM CURSOR -->
+    <div class="cursor"></div>
+
+    <!-- PREMIUM LOADER -->
+    <div class="loader">
+        <!-- Abstract Geometric Flower / Inlay Pattern -->
+        <svg class="loader-icon" viewBox="0 0 100 100">
+            <path d="M50 5 L65 35 L95 50 L65 65 L50 95 L35 65 L5 50 L35 35 Z" />
+            <path d="M50 20 L60 40 L80 50 L60 60 L50 80 L40 60 L20 50 L40 40 Z" opacity="0.5" />
+            <circle cx="50" cy="50" r="5" fill="var(--accent)" style="stroke: none;" />
+        </svg>
+
+        <div class="loader-text" id="loaderText">
+            <!-- Spans injected via JS -->
+        </div>
+
+        <div class="loader-progress">00</div>
+    </div>
+
+    <!-- HEADER -->
+    <header>
+        <div class="logo hover-trigger">PB-07</div>
+        <div class="menu-btn hover-trigger" onclick="toggleTheme()">Day / Night</div>
+    </header>
+
+    <main>
+        <!-- HERO -->
+        <section class="hero container">
+            <div style="z-index: 2;">
+                <div class="hero-title">
+                    <div class="mono" style="margin-bottom: 20px;">EST. 14TH CENTURY — PUNJAB</div>
+                    <h1 class="h1">
+                        <span><i>THE CITY</i></span>
+                        <span><i>OF SAINTS</i></span>
+                    </h1>
+                    <div class="p-lead p-lead-hero" style="margin-top: 40px; opacity: 0;">
+                        An intersection of ancient craft and modern intellect. <br>
+                        Home to the Shivalik foothills and exquisite wood inlay.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hero-img-wrap">
+                <!-- Abstract placeholder for city architecture/nature -->
+                <svg width="100%" height="100%" viewBox="0 0 400 600" preserveAspectRatio="none">
+                    <rect width="100%" height="100%" fill="#dcdcdc" />
+                    <circle cx="200" cy="300" r="150" fill="#c44d28" opacity="0.8" />
+                    <rect x="50" y="50" width="300" height="500" fill="none" stroke="#1a1a1a" stroke-width="2" />
+                </svg>
+            </div>
+        </section>
+
+        <!-- INTRODUCTION -->
+        <section class="section container" id="crafts">
+            <div class="heritage-grid">
+                <div class="reveal">
+                    <h2 class="h2">The Craft of <br><span style="color: var(--accent); font-style: italic;">Inlay</span></h2>
+                </div>
+                <div class="reveal">
+                    <p class="p-lead">
+                        Hoshiarpur is the global epicenter of wooden inlay work. Using Sheesham wood, artisans embed acrylic, plastic, or ivory replacements to create intricate geometric and floral patterns. A tradition passed down through centuries.
+                    </p>
+                    <br>
+                    <p class="mono">EXPORT QUALITY • HANDCRAFTED • TIMELESS</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section container" id="history">
+            <div class="mono" style="margin-bottom: 40px;">01 — THE TIMELINE</div>
+            <h2 class="h2 reveal">The Evolution</h2>
+            
+            <div class="history-timeline">
+                <div class="timeline-item reveal">
+                    <div class="timeline-year">1300s</div>
+                    <div class="timeline-content">
+                        <h3 class="timeline-title">The Foundation</h3>
+                        <p class="p-lead">Local tradition traces the founding of the city to two brothers, Hargobind and Ram Chand. The name "Hoshiarpur" is said to be derived from a local resident, Hoshiar Khan, or from the word 'Hoshiar' (Alert/Intelligent), reflecting the character of its people.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item reveal">
+                    <div class="timeline-year">1800s</div>
+                    <div class="timeline-content">
+                        <h3 class="timeline-title">The Sikh Empire & British Rule</h3>
+                        <p class="p-lead">Under Maharaja Ranjit Singh, Hoshiarpur became an integral part of the Sikh Empire. In 1846, following the First Anglo-Sikh War, it passed into British administration, becoming a crucial district for recruitment and agriculture.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item reveal">
+                    <div class="timeline-year">1924</div>
+                    <div class="timeline-content">
+                        <h3 class="timeline-title">The VVRI Establishment</h3>
+                        <p class="p-lead">The Vishveshvaranand Vedic Research Institute was moved here, transforming the city into a globally recognized center for Sanskrit and Indological research, cementing its status as an intellectual hub.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item reveal">
+                    <div class="timeline-year">NOW</div>
+                    <div class="timeline-content">
+                        <h3 class="timeline-title">Modern Resilience</h3>
+                        <p class="p-lead">Today, Hoshiarpur leads Punjab in literacy rates and is the undisputed capital of Wood Inlay craft. It stands as a bridge between the spiritual past of its saints and the technological future of its residents.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MARQUEE -->
+        <div class="marquee-wrap">
+            <div class="marquee-content">
+                <span class="marquee-item">HOSHIARPUR</span>
+                <span class="marquee-item" style="font-family: var(--font-body); -webkit-text-stroke: 0; color: var(--text);">PUNJAB</span>
+                <span class="marquee-item">DOABA</span>
+                <span class="marquee-item" style="font-family: var(--font-body); -webkit-text-stroke: 0; color: var(--text);">CULTURE</span>
+                <span class="marquee-item">HOSHIARPUR</span>
+                <span class="marquee-item" style="font-family: var(--font-body); -webkit-text-stroke: 0; color: var(--text);">PUNJAB</span>
+            </div>
+        </div>
+
+        <!-- LOCATIONS -->
+        <section class="section container">
+            <div class="flex-sb" style="margin-bottom: 60px;">
+                <h2 class="h2 reveal">Selected<br>Landmarks</h2>
+                <div class="mono reveal">Scroll to Explore ↓</div>
+            </div>
+
+            <div class="locations-list">
+                <div class="location-item reveal hover-trigger">
+                    <span class="location-name">Takhni-Rehmapur</span>
+                    <span class="location-meta">WILDLIFE SANCTUARY</span>
+                </div>
+                <div class="location-item reveal hover-trigger">
+                    <span class="location-name">Sheesh Mahal</span>
+                    <span class="location-meta">ARCHITECTURE</span>
+                </div>
+                <div class="location-item reveal hover-trigger">
+                    <span class="location-name">Shah Noor Jamal</span>
+                    <span class="location-meta">SPIRITUAL SITE</span>
+                </div>
+                <div class="location-item reveal hover-trigger">
+                    <span class="location-name">Citrus Estates</span>
+                    <span class="location-meta">AGRICULTURE</span>
+                </div>
+                <div class="location-item reveal hover-trigger">
+                    <span class="location-name">Vedic Institute</span>
+                    <span class="location-meta">RESEARCH / HISTORY</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="container">
+            <div class="footer-grid">
+                <div>
+                    <h2 class="h2">Visit Us</h2>
+                    <p class="p-lead">Discover the serenity of the foothills and the bustle of the markets.</p>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                    <a href="https://maps.app.goo.gl/1iE5YZ2En3s12cav7/" target="_blank" class="footer-link hover-trigger">Maps</a>
+                    <a href="#history" class="footer-link hover-trigger">History</a>
+                    <a href="https://hoshiarpur.nic.in/" target="_blank" class="footer-link hover-trigger">Contact Govt</a>
+                    <a href="#crafts" class="footer-link hover-trigger">Crafts</a>
+                </div>
+            </div>
+            <div class="flex-sb" style="margin-top: 80px; padding-top: 20px; border-top: 1px solid var(--line);">
+                <span class="mono">31.51° N, 75.91° E</span>
+                <span class="mono">© 2026 GauravKatnoria.</span>
+            </div>
+        </footer>
+    </main>
+
+    <script>
+        // --- LOADING ANIMATION LOGIC ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const loaderTextContainer = document.getElementById('loaderText');
+            const progressEl = document.querySelector('.loader-progress');
+            const text = "HOSHIARPUR";
+            
+            // 1. Inject spans for text animation
+            text.split('').forEach((char, index) => {
+                const span = document.createElement('span');
+                span.innerText = char;
+                span.style.animationDelay = `${index * 0.1}s`;
+                loaderTextContainer.appendChild(span);
+            });
+
+            // 2. Simulate Loading Progress
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 5) + 1;
+                if (progress > 100) progress = 100;
+                
+                // Format with leading zero if needed
+                progressEl.innerText = progress < 10 ? `0${progress}` : progress;
+
+                if (progress === 100) {
+                    clearInterval(interval);
+                    finishLoading();
+                }
+            }, 50); // Speed of counter
+
+            function finishLoading() {
+                setTimeout(() => {
+                    document.body.classList.remove('loading');
+                    document.body.classList.add('loaded');
+                }, 800); // Slight pause at 100% before lifting curtain
+            }
+        });
+
+        // --- THEME TOGGLE ---
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            body.setAttribute('data-theme', currentTheme === 'light' ? 'dark' : 'light');
+        }
+
+        // --- CURSOR FOLLOWER ---
+        const cursor = document.querySelector('.cursor');
+        // Re-select triggers dynamically if needed, or stick to static list
+        const hoverTriggers = document.querySelectorAll('.hover-trigger');
+
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        });
+
+        hoverTriggers.forEach(trigger => {
+            trigger.addEventListener('mouseenter', () => cursor.classList.add('active'));
+            trigger.addEventListener('mouseleave', () => cursor.classList.remove('active'));
+        });
+
+        // --- SCROLL REVEAL OBSERVER ---
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    </script>
+</body>
+</html>
