@@ -8,7 +8,7 @@ Hey! 👋 This is the source for my Hoshiarpur city concept website — a premiu
 
 A single-page, immersive experience built to showcase the history, heritage, and landmarks of **Hoshiarpur, Punjab**. The design is inspired by the city's most iconic craft — the intricate wooden inlay work — and translates that sense of precision and artistry into a digital medium.
 
-No frameworks. No npm. Just HTML, CSS, and vanilla JavaScript doing some really satisfying things. ✨
+No frameworks. No npm. Just HTML, CSS, and JavaScript doing some really satisfying things. ✨
 
 ---
 
@@ -33,9 +33,8 @@ No frameworks. No npm. Just HTML, CSS, and vanilla JavaScript doing some really 
 |---|---|
 | Markup | HTML5 |
 | Styling | Pure CSS3 (CSS custom properties, clamp, transitions) |
-| Logic | Vanilla JavaScript |
 | Fonts | Cinzel (display) · Space Grotesk (body) · Space Mono (mono) |
-| SVG | Hand-written SVG for loader animation and hero placeholder |
+| SVG | SVG for loader animation and hero placeholder |
 
 Zero dependencies. Zero build tools. One file. 🙌
 
